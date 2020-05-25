@@ -1,8 +1,9 @@
 package com.aboutyou.dart_packages.sign_in_with_apple
 
-import android.app.Activity;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.app.Activity
+import android.content.Context
+import android.os.Bundle
+import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -85,10 +86,8 @@ public class SignInWithApplePlugin: FlutterPlugin, MethodCallHandler, ActivityAw
           _activity.startActivity(notificationIntent)
         }
 
-        val builder = CustomTabsIntent.Builder();
-        val customTabsIntent = builder.build();
-        customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        customTabsIntent.launchUrl(_activity, Uri.parse(url));
+        val intent = ChromeCustomTabsCaller.newIntent(_activity, url);
+        _activity.startActivity(intent)
       }
       else -> {
         result.notImplemented()
@@ -144,5 +143,55 @@ public class SignInWithAppleCallback: Activity {
     }
 
     finish()
+  }
+}
+
+/**
+ * Activity used to call the chrome custom tabs and get a result if it is canceled
+ */
+public class ChromeCustomTabsCaller: Activity {
+
+  companion object {
+    private val CUSTOM_TABS_REQUEST_CODE = 1
+
+    fun newIntent(context: Context, url: String): Intent {
+      val intent = Intent(context, ChromeCustomTabsCaller::class.java)
+      intent.putExtra("url", url)
+      return intent
+    }
+  } 
+
+  constructor() : super()
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    val url = intent.getStringExtra("url")
+      ?: throw IllegalStateException("Missing 'url' argument")
+
+    val builder = CustomTabsIntent.Builder()
+    val customTabsIntent = builder.build()
+    customTabsIntent.intent.setData(Uri.parse(url))
+    customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+    startActivityForResult(customTabsIntent.intent, CUSTOM_TABS_REQUEST_CODE);
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    if (requestCode == CUSTOM_TABS_REQUEST_CODE) {
+      
+      if (resultCode == Activity.RESULT_CANCELED) {
+        val lastAuthorizationRequestResult = SignInWithApplePlugin.lastAuthorizationRequestResult
+        if (lastAuthorizationRequestResult != null) {
+          lastAuthorizationRequestResult.error("android/canceled", "Canceled by the user", null)
+          SignInWithApplePlugin.lastAuthorizationRequestResult = null
+        }
+      }
+
+      finish();
+    }
+    else {
+      super.onActivityResult(requestCode, resultCode, data)
+    }
   }
 }

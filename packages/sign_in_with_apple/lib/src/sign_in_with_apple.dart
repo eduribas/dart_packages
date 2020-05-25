@@ -67,7 +67,7 @@ class SignInWithApple {
   /// The returned Future will resolve in all cases on iOS and macOS, either with an exception if Sign in with Apple is not available,
   /// or as soon as the native UI goes away (either due cancellation or the completion of the authorization).
   ///
-  /// On Android the returned Future will never resolve in case the user closes the Chrome Custom Tab without finsihing the authentication flow.
+  /// On Android the returned Future will resolve with an exception in case the user closes the Chrome Custom Tab without finsihing the authentication flow.
   /// Any previous Future would be rejected if the [getAppleIDCredential] is called again, while an earlier one is still pending.
   ///
   /// Throws an [SignInWithAppleException] in case there was any error retrieving the credential.
@@ -97,22 +97,23 @@ class SignInWithApple {
   }) async {
     assert(scopes != null);
 
-    if (Platform.isAndroid) {
-      if (webAuthenticationOptions == null) {
-        throw Exception(
-          '`webAuthenticationOptions` argument must be provided on Android.',
+    try {
+      if (Platform.isAndroid) {
+        if (webAuthenticationOptions == null) {
+          throw Exception(
+            '`webAuthenticationOptions` argument must be provided on Android.',
+          );
+        }
+
+        return await _signInWithAppleAndroid(
+          scopes: scopes,
+          webAuthenticationOptions: webAuthenticationOptions,
+          nonce: nonce,
+          state: state,
         );
       }
 
-      return _signInWithAppleAndroid(
-        scopes: scopes,
-        webAuthenticationOptions: webAuthenticationOptions,
-        nonce: nonce,
-        state: state,
-      );
-    }
-
-    try {
+    // try {
       if (!Platform.isIOS &&
           !Platform.isMacOS &&
           Platform.environment['FLUTTER_TEST'] != 'true') {
@@ -120,7 +121,7 @@ class SignInWithApple {
           message: 'The current platform is not supported',
         );
       }
-
+    
       return parseAuthorizationCredentialAppleID(
         await channel.invokeMethod<Map<dynamic, dynamic>>(
           'performAuthorizationRequest',
