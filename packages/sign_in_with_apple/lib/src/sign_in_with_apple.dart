@@ -64,6 +64,9 @@ class SignInWithApple {
   ///
   /// User data fields (first name, last name, email) will only be set if this is the initial authentication between the current app and Apple ID.
   ///
+  /// On iOS 13+ the authentication is performed using the native method. On iOS versions 9 to 12 the authentication is performed using
+  /// a Safari web session.
+  ///
   /// The returned Future will resolve in all cases on iOS and macOS, either with an exception if Sign in with Apple is not available,
   /// or as soon as the native UI goes away (either due cancellation or the completion of the authorization).
   ///
@@ -74,7 +77,7 @@ class SignInWithApple {
   /// A specialized [SignInWithAppleAuthorizationException] is thrown in case of authorization errors, which contains
   /// further information about the failure.
   ///
-  /// Throws an [SignInWithAppleNotSupportedException] in case Sign in with Apple is not available (e.g. iOS < 13, macOS < 10.15)
+  /// Throws an [SignInWithAppleNotSupportedException] in case Sign in with Apple is not available (e.g. iOS < 9, macOS < 10.15)
   static Future<AuthorizationCredentialAppleID> getAppleIDCredential({
     @required List<AppleIDAuthorizationScopes> scopes,
 
@@ -97,22 +100,23 @@ class SignInWithApple {
   }) async {
     assert(scopes != null);
 
-    if (Platform.isAndroid) {
-      if (webAuthenticationOptions == null) {
-        throw Exception(
-          '`webAuthenticationOptions` argument must be provided on Android.',
+    try {
+
+      if (Platform.isAndroid || !(await _isNativeSignInAvailable())) {
+        if (webAuthenticationOptions == null) {
+          throw Exception(
+            '`webAuthenticationOptions` argument must be provided on Android.',
+          );
+        }
+
+        return await _signInWithAppleWeb(
+          scopes: scopes,
+          webAuthenticationOptions: webAuthenticationOptions,
+          nonce: nonce,
+          state: state,
         );
       }
 
-      return _signInWithAppleAndroid(
-        scopes: scopes,
-        webAuthenticationOptions: webAuthenticationOptions,
-        nonce: nonce,
-        state: state,
-      );
-    }
-
-    try {
       if (!Platform.isIOS &&
           !Platform.isMacOS &&
           Platform.environment['FLUTTER_TEST'] != 'true') {
@@ -187,13 +191,17 @@ class SignInWithApple {
     return channel.invokeMethod<bool>('isAvailable');
   }
 
-  static Future<AuthorizationCredentialAppleID> _signInWithAppleAndroid({
+  static Future<bool> _isNativeSignInAvailable() {
+    return channel.invokeMethod<bool>('isNativeSignInAvailable');
+  }
+
+  static Future<AuthorizationCredentialAppleID> _signInWithAppleWeb({
     @required List<AppleIDAuthorizationScopes> scopes,
     @required WebAuthenticationOptions webAuthenticationOptions,
     @required String nonce,
     @required String state,
   }) async {
-    assert(Platform.isAndroid);
+    // assert(Platform.isAndroid);
 
     // URL built according to https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
     final uri = Uri(
@@ -233,7 +241,7 @@ class SignInWithApple {
       <String, String>{
         'url': uri,
       },
-    );
+    );    
 
     return parseAuthorizationCredentialAppleIDFromDeeplink(Uri.parse(result));
   }

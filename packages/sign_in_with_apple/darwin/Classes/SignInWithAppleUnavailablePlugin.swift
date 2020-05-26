@@ -18,9 +18,8 @@ public class SignInWithAppleUnavailablePlugin: NSObject, FlutterPlugin {
         print("SignInWithAppleUnavailablePlugin tried to register which is not allowed")
     }
     
-
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if call.method == "isAvailable" {
+        if call.method == "isAvailable" || call.method == "isNativeSignInAvailable" {
             result(false)
             return
         }
