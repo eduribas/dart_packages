@@ -25,6 +25,7 @@ abstract class SignInWithAppleException implements Exception {
           message: exception.message,
         );
       case 'safari/canceled':
+      case 'android/canceled':
       case 'authorization-error/canceled':
         return SignInWithAppleAuthorizationException(
           code: AuthorizationErrorCode.canceled,
