@@ -57,6 +57,7 @@ public class SignInWithApplePlugin: FlutterPlugin, MethodCallHandler, ActivityAw
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     when (call.method) {
       "isAvailable" -> result.success(true)
+      "isNativeSignInAvailable" -> result.success(false)
       "performAuthorizationRequest" -> {
         val _activity = activity
 

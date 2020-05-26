@@ -6,10 +6,8 @@ import FlutterMacOS
 import Flutter
 #endif
 
-let methodChannelName = "com.aboutyou.dart_packages.sign_in_with_apple"
-
 @available(iOS 13.0, macOS 10.15, *)
-public class SignInWithAppleAvailablePlugin: NSObject, FlutterPlugin {
+public class SignInWithAppleNativePlugin: NSObject, FlutterPlugin {
     var _lastSignInWithAppleAuthorizationController: SignInWithAppleAuthorizationController?
 
     // This plugin should not be registered with directly
@@ -20,7 +18,7 @@ public class SignInWithAppleAvailablePlugin: NSObject, FlutterPlugin {
     // Each target platform will still need a specific Plugin implementation
     // which will need to decide whether or not Sign in with Apple is available
     public static func register(with registrar: FlutterPluginRegistrar) {
-        print("SignInWithAppleAvailablePlugin tried to register which is not allowed")
+        print("SignInWithAppleNativePlugin tried to register which is not allowed")
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -28,6 +26,9 @@ public class SignInWithAppleAvailablePlugin: NSObject, FlutterPlugin {
         case "isAvailable":
             result(true)
             
+        case "isNativeSignInAvailable":
+            result(true)
+
         case "performAuthorizationRequest":
             // Makes sure arguments exists and is a List
             guard let args = call.arguments as? [Any] else {
