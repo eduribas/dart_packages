@@ -17,6 +17,8 @@ import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import io.flutter.Log
 
+val TAG = "SignInWithApple"
+
 /** SignInWithApplePlugin */
 public class SignInWithApplePlugin: FlutterPlugin, MethodCallHandler, ActivityAware, ActivityResultListener {
   private val CUSTOM_TABS_REQUEST_CODE = 1001;
@@ -82,9 +84,9 @@ public class SignInWithApplePlugin: FlutterPlugin, MethodCallHandler, ActivityAw
         lastAuthorizationRequestResult = result
         triggerMainActivityToHideChromeCustomTab = {
           val notificationIntent = _activity.packageManager.getLaunchIntentForPackage(_activity.packageName);
-          notificationIntent.setPackage(null)
+          notificationIntent?.setPackage(null)
           // Bring the Flutter activity back to the top, by popping the Chrome Custom Tab
-          notificationIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
+          notificationIntent?.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
           _activity.startActivity(notificationIntent)
         }
 
@@ -143,7 +145,6 @@ public class SignInWithApplePlugin: FlutterPlugin, MethodCallHandler, ActivityAw
  * Activity which is used when the web-based authentication flow links back to the app
  *
  * DO NOT rename this or it's package name as it's configured in the consumer's `AndroidManifest.xml`
- *
  */
 public class SignInWithAppleCallback: Activity {
   constructor() : super()
@@ -160,7 +161,7 @@ public class SignInWithAppleCallback: Activity {
     } else {
       SignInWithApplePlugin.triggerMainActivityToHideChromeCustomTab = null
 
-      throw Exception("Received Sign in with Apple callback, but 'lastAuthorizationRequestResult' function was `null`")
+      Log.e(TAG, "Received Sign in with Apple callback, but 'lastAuthorizationRequestResult' function was `null`")
     }
 
     val triggerMainActivityToHideChromeCustomTab = SignInWithApplePlugin.triggerMainActivityToHideChromeCustomTab
@@ -168,7 +169,7 @@ public class SignInWithAppleCallback: Activity {
       triggerMainActivityToHideChromeCustomTab()
       SignInWithApplePlugin.triggerMainActivityToHideChromeCustomTab = null
     } else {
-      throw Exception("Received Sign in with Apple callback, but 'triggerMainActivityToHideChromeCustomTab' function was `null`")
+      Log.e(TAG, "Received Sign in with Apple callback, but 'triggerMainActivityToHideChromeCustomTab' function was `null`")
     }
 
     finish()

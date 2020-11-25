@@ -42,7 +42,7 @@ SignInWithAppleButton(
 
 Integrating Sign in with Apple goes beyond just adding this plugin to your `pubspec.yaml` and using the credential-receiving functions exposed by it.
 
-Once you receive the credentials, they need to the verified with Apple's servers (to ensure that they are valid and really concern the mentioned user) and then a new session should be derived from them in your system.
+Once you receive the credentials, they need to be verified with Apple's servers (to ensure that they are valid and really concern the mentioned user) and then a new session should be derived from them in your system.
 
 Your server should then daily verify the session with Apple (via a refresh token it obtained on the initial validation), and revoke the session in your system if the authorization has been withdrawn on Apple's side.
 
@@ -122,6 +122,17 @@ After this is done, you can now proceed to integrate Sign in with Apple into the
 
 Adding Sign in with Apple to a Flutter app is shown from 2 sides here. First we look into making the example app work with our server-side setup, and then we go over the additional steps required to set up your app from scratch.
 
+To use this plugin on Android, you will need to use the [Android V2 Embedding](https://github.com/flutter/flutter/wiki/Upgrading-pre-1.12-Android-projects).  
+You can find out if you are already using the new embedding by looking into your `AndroidManifest.xml` and look for the following element:
+```xml
+<meta-data
+  android:name="flutterEmbedding"
+  android:value="2" 
+/>
+```
+
+In case you are not yet using Android V2 Embedding, please first upgrade your app using the following guide: https://github.com/flutter/flutter/wiki/Upgrading-pre-1.12-Android-projects
+
 #### Example App
 
 - Open the `example` folder inside this package in an editor of your choice
@@ -134,7 +145,7 @@ Adding Sign in with Apple to a Flutter app is shown from 2 sides here. First we 
 
 #### Your App
 
-In your `AndroidManifest.xml` inside `<application>` add
+In your `android/app/src/main/AndroidManifest.xml` inside `<application>` add
 
 ```xml
 <!-- Set up the Sign in with Apple activity, such that it's callable from the browser-redirect -->
